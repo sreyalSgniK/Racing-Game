@@ -3,12 +3,13 @@ import Car from './Car';
 // import { keyStates } from '../Controls';
 
 export default class Player extends Car {
-    scale = 0.01;
+    scale = 0.03;
+    rotationAngle = Math.PI-0.10*Math.PI;
 
-    constructor(scene = THREE.Scene, modelURL) {
+    constructor(scene = THREE.Scene, modelURL = String) {
         super(scene, modelURL);
 
-        super.loadGLTF(this.modelURL, this.scene, this.scale);
+        super.loadGLTF(this.modelURL, this.scene, this.scale, this.rotationAngle);
 
 
         this.keyStates = {};
@@ -29,48 +30,63 @@ export default class Player extends Car {
 
 
     handleInput() {
-        
-        if(!this.loading){
-            this.carScene.position.x += this.movementSpeed * Math.sin(this.carScene.rotation.y);
-	        this.carScene.position.z += this.movementSpeed * Math.cos(this.carScene.rotation.y);
+        // Decelerate movement speed when neither 'KeyW' nor 'KeyS' is pressed
+        if (!this.keyStates['KeyW'] && !this.keyStates['KeyS']) {
+            if (this.movementSpeed > 0) {
+                this.movementSpeed -= this.deceleration; // Decelerate forward movement
+            } else if (this.movementSpeed < 0) {
+                this.movementSpeed += this.deceleration; // Decelerate backward movement
+            }
 
-            if (this.keyStates['KeyW']) {
-        
-                if(this.movementSpeed < this.maxForwardSpeed){
-                    this.movementSpeed += this.acceleration;
-                }
-                
-                console.log("Up");
-            }
-            if (this.keyStates['KeyS']) {
-        
-                if(this.movementSpeed > this.maxBackwardSpeed){
-                    this.movementSpeed -= this.acceleration;
-                }
-                
-                console.log("Down");
-            }
-            if (this.keyStates['KeyA']) {
-        
-                this.carScene.rotation.y += this.rotationSpeed;
-                
-                console.log("Left");
-            }
-            if (this.keyStates['KeyD']) {
-        
-                this.carScene.rotation.y -= this.rotationSpeed;
-                
-                console.log("Right");
+            // Clamp movement speed to zero to prevent small oscillations around zero
+            if (Math.abs(this.movementSpeed) < this.deceleration) {
+                this.movementSpeed = 0;
             }
         }
         
-        console.log(this.movementSpeed);
+        
+        this.carScene.position.x += this.movementSpeed * Math.sin(this.carScene.rotation.y);
+        this.carScene.position.z += this.movementSpeed * Math.cos(this.carScene.rotation.y);
+
+        if (this.keyStates['KeyW']) {
+    
+            if(this.movementSpeed < this.maxForwardSpeed){
+                this.movementSpeed += this.acceleration;
+            }
+            
+            // console.log("Up");
+        }
+        if (this.keyStates['KeyS']) {
+    
+            if(this.movementSpeed > this.maxBackwardSpeed){
+                this.movementSpeed -= this.acceleration;
+            }
+            
+            // console.log("Down");
+        }
+        if (this.keyStates['KeyA']) {
+    
+            this.carScene.rotation.y += this.rotationSpeed;
+            
+            // console.log("Left");
+        }
+        if (this.keyStates['KeyD']) {
+    
+            this.carScene.rotation.y -= this.rotationSpeed;
+            
+            // console.log("Right");
+        }
+        
+        
+        // console.log(this.movementSpeed);
     }
 
 
     update() {
-        this.handleInput();
+        if(!this.loading){
+            this.handleInput();
         
-        // console.log(this.carScene);
+        // console.log(this.carScene.position.x, this.carScene.position.y, this.carScene.position.z);
+        }
     }
 }

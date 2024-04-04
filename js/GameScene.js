@@ -1,19 +1,23 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import  Player from "./objects/Player";
+import Track from "./objects/Track";
+import TPSCamera from "./TPSCamera";
 
 export default class GameScene extends THREE.Scene {
 
     width = 0;
     height = 0;
 
-    camera = THREE.PerspectiveCamera;
+    TPSCamera = TPSCamera;
     renderer = THREE.WebGLRenderer;
 
     orbitals = OrbitControls;
 
 
     player = Player;
+
+    track = Track;
 
 
 
@@ -32,19 +36,28 @@ export default class GameScene extends THREE.Scene {
 
 
         // Set up camera
-        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        this.camera.position.set( 0, 2, 10 );
-        this.orbitals = new OrbitControls( this.camera, this.renderer.domElement );
-        this.orbitals.update();
+        // this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100000 );
+        // this.camera.position.set( 50, 100, 50 );
+        // this.orbitals = new OrbitControls( this.camera, this.renderer.domElement );
+        // this.orbitals.update();
+
+        // Add race track
+        this.track = new Track(this, "models/desert_map.glb");
 
         // Add player
         this.player = new Player(this, "models/car2.glb");
 
-        let geometry = new THREE.BoxGeometry( 1, 1, 1 );
-        let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-        let cube = new THREE.Mesh( geometry, material );
-        this.add( cube );
+        // let geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        // let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+        // let cube = new THREE.Mesh( geometry, material );
+        // this.add( cube );
 
+        // Add a third person camera that follows the player
+        this.TPSCamera = new TPSCamera(this, this.player);
+
+        
+        // const axesHelper = new THREE.AxesHelper( 500 );
+        // this.add( axesHelper );
 
 
 
@@ -68,10 +81,15 @@ export default class GameScene extends THREE.Scene {
 
 
     update() {
+        if(!this.player.loading) {
 
-        this.player.update();
+            this.player.update();
 
-        this.renderer.render( this, this.camera );
+            this.TPSCamera.update();
+
+        }
+
+        this.renderer.render( this, this.TPSCamera.camera );
     }
 
 }

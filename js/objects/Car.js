@@ -14,8 +14,9 @@ export default class Car {
     movementSpeed = 0;
     rotationSpeed = 0.01;
     acceleration = 0.001;
-    maxForwardSpeed = 0.3;
-    maxBackwardSpeed = -0.1;
+    maxForwardSpeed = 0.5;
+    maxBackwardSpeed = -0.2;
+    deceleration = 0.0008;
 
     constructor(scene = THREE.Scene, modelURL = String) {
         this.scene = scene;
@@ -27,7 +28,11 @@ export default class Car {
         scene.scale.set(scale, scale, scale);
     }
 
-    loadGLTF(modelURL, scene, scale) {
+    rotateGLTFonYAxis(scene, rotationAngle) {
+        scene.rotateOnAxis(new THREE.Vector3(0, 1, 0), rotationAngle);
+    }
+
+    loadGLTF(modelURL, scene, scale, rotationAngle) {
         this.loading = true; // Set loading flag to true
         let loader = new GLTFLoader();
         loader.load(
@@ -38,13 +43,12 @@ export default class Car {
                 this.carScene = gltf.scene;
                 this.scaleGLTF(this.carScene, scale);
                 scene.add(this.carScene);
-                // console.log(typeof this.carScene);
                 this.loading = false; // Set loading flag to false
             },
             // called while loading is progressing
             (xhr) => {
 
-                console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+                // console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
 
             },
             // called when loading has errors
