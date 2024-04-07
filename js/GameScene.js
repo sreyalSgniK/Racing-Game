@@ -13,10 +13,7 @@ export default class GameScene extends THREE.Scene {
     TPSCamera = TPSCamera;
     renderer = THREE.WebGLRenderer;
 
-    // orbitals = OrbitControls;
-
-
-    
+    orbitals = OrbitControls;
 
     track = Track;
 
@@ -41,10 +38,10 @@ export default class GameScene extends THREE.Scene {
 
 
         // Set up camera
-        // this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100000 );
-        // this.camera.position.set( 50, 100, 50 );
-        // this.orbitals = new OrbitControls( this.camera, this.renderer.domElement );
-        // this.orbitals.update();
+        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100000 );
+        this.camera.position.set( 50, 100, 50 );
+        this.orbitals = new OrbitControls( this.camera, this.renderer.domElement );
+        this.orbitals.update();
 
         // Add race track
         this.track = new Track(this, "models/desert_map2.glb");
@@ -52,8 +49,8 @@ export default class GameScene extends THREE.Scene {
         // Add player
         this.player = new Player(this, "models/car2.glb");
 
-        // Add bot  ||  TODO: change bot model
-        this.bot = new Bot(this, "models/car_blue.glb", new THREE.Vector3(12,0,0));
+        // Add bot
+        this.bot = new Bot(this, "models/car_blue.glb", new THREE.Vector3(12,0,0), this.track);
 
         // let geometry = new THREE.BoxGeometry( 1, 1, 1 );
         // let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
@@ -70,7 +67,7 @@ export default class GameScene extends THREE.Scene {
 
 
         // Add light
-        const light = new THREE.AmbientLight(); 
+        const light = new THREE.AmbientLight(0xffffff, 2); 
         this.add( light );
 
 

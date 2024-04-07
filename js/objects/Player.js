@@ -4,8 +4,6 @@ import Car from './Car';
 import { saveAs } from 'file-saver'; // Import FileSaver.js for file saving
 
 export default class Player extends Car {
-    // scale = 0.03;
-    // rotationAngle = 0.9*Math.PI;
 
     constructor(scene = THREE.Scene, modelURL = String) {
         super(scene, modelURL);
@@ -29,6 +27,8 @@ export default class Player extends Car {
         // Add event listeners for keydown and keyup events
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
+
+        this.speedBarElement = document.getElementById('speedBar');
     }
 
 
@@ -47,9 +47,7 @@ export default class Player extends Car {
             }
         }
         
-        
-        this.carScene.position.x += this.movementSpeed * Math.sin(this.carScene.rotation.y) * deltaTime;
-        this.carScene.position.z += this.movementSpeed * Math.cos(this.carScene.rotation.y) * deltaTime;
+    
 
         if (this.keyStates['KeyP']) {
             this.keyStates['KeyP'] = false;
@@ -81,15 +79,20 @@ export default class Player extends Car {
         if (this.keyStates['KeyA']) {
     
             this.carScene.rotation.y += this.rotationSpeed * deltaTime;
+            (this.movementSpeed > 0) ? this.movementSpeed -= this.turnDeceleration * deltaTime : this.movementSpeed += this.turnDeceleration * deltaTime;
             
             // console.log("Left");
         }
         if (this.keyStates['KeyD']) {
     
             this.carScene.rotation.y -= this.rotationSpeed * deltaTime;
+            (this.movementSpeed > 0) ? this.movementSpeed -= this.turnDeceleration * deltaTime : this.movementSpeed += this.turnDeceleration * deltaTime;
             
             // console.log("Right");
         }
+
+        this.carScene.position.x += this.movementSpeed * Math.sin(this.carScene.rotation.y) * deltaTime;
+        this.carScene.position.z += this.movementSpeed * Math.cos(this.carScene.rotation.y) * deltaTime;
         
         
         // console.log(this.movementSpeed);
@@ -101,8 +104,16 @@ export default class Player extends Car {
             this.handleInput(deltaTime);
 
             // console.log(this.movementSpeed);
+
+            // console.log(this.carScene.position);
+
+            // Update speed bar height (based on movementSpeed between 0 and maxForwardSpeed)
+            const normalizedSpeed = (this.movementSpeed > 0) ? Math.min(Math.max(this.movementSpeed, 0), this.maxForwardSpeed) : Math.min(Math.max(Math.abs(this.movementSpeed), 0), this.maxForwardSpeed);
+            const normalizedHeight = (normalizedSpeed / this.maxForwardSpeed) * 200; // Map speed to bar height (200px max)
+
+            this.speedBarElement.style.height = `${normalizedHeight}px`;
         
-        // console.log(this.carScene.position);
+        
         }
     }
 
@@ -125,7 +136,9 @@ export default class Player extends Car {
             const formattedY = pos.y.toFixed(2);
             const formattedZ = pos.z.toFixed(2);
             // return `(${formattedX}, ${formattedY}, ${formattedZ})`;
-            return `this.path.add(new YUKA.Vector3(${formattedX}, ${formattedY}, ${formattedZ}));`;
+            return `{ x: ${formattedX}, y: ${formattedY}, z: ${formattedZ}},`;
+            // { x: 13.54, y: 0.00, z: -316.50 },
+            // return `this.path.add(new YUKA.Vector3(${formattedX}, ${formattedY}, ${formattedZ}));`;
         });
         const positionsText = positionStrings.join('\n');
 

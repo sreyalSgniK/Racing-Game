@@ -6,18 +6,23 @@ export default class Car {
     scene = THREE.Scene;
     
     modelURL = "";
+    
+    carScene = null;
 
+    // Model parameters
     scale = 0.03;
     rotationAngle = 0.9*Math.PI;
 
-    carScene = null;
-
+    // Car parameters
     movementSpeed = 0;
-    rotationSpeed = 1;
+    rotationSpeed = 0.8;
     acceleration = 10;
-    maxForwardSpeed = 50;
-    maxBackwardSpeed = -20;
+    maxForwardSpeed = 80;
+    maxBackwardSpeed = -30;
     deceleration = 3;
+    turnDeceleration = 8;
+
+    // Loading flag: Program will wait for the models to finish loading before continuing
     loading = true;
 
     constructor(scene = THREE.Scene, modelURL = String) {
