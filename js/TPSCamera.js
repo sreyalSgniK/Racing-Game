@@ -11,7 +11,12 @@ export default class TPSCamera {
 
         // Set initial camera position and orientation relative to the player
         this.offset = new THREE.Vector3(0, 5, -10); // Offset behind and above the player
+        this.smoothFactor = 0.05; // Adjust the smooth factor (0 to 1)
         this.update(); // Update camera position and orientation based on player's initial position
+
+        // Initialize camera position and look-at target
+        this.targetPosition = new THREE.Vector3();
+        this.cameraPosition = new THREE.Vector3();
 
         // Add the camera to the scene
         this.scene.add(this.camera);
@@ -20,16 +25,18 @@ export default class TPSCamera {
 
     update() {
         if(!this.player.loading) {
-            // Update camera position and orientation based on player's position and rotation
             const playerPosition = this.player.carScene.position.clone();
             const playerRotation = this.player.carScene.rotation.clone();
 
-            // Calculate camera position relative to player using offset and player's rotation
+            // Calculate target position for the camera
             const cameraOffset = this.offset.clone().applyEuler(playerRotation);
-            const cameraPosition = playerPosition.clone().add(cameraOffset);
+            this.targetPosition.copy(playerPosition).add(cameraOffset);
+
+            // Smoothly interpolate camera position towards the target position
+            this.cameraPosition.lerp(this.targetPosition, this.smoothFactor);
 
             // Set camera position and look at the player's position
-            this.camera.position.copy(cameraPosition);
+            this.camera.position.copy(this.cameraPosition);
             this.camera.lookAt(playerPosition);
         }
     }

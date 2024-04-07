@@ -12,7 +12,7 @@ export default class GameScene extends THREE.Scene {
     TPSCamera = TPSCamera;
     renderer = THREE.WebGLRenderer;
 
-    orbitals = OrbitControls;
+    // orbitals = OrbitControls;
 
 
     player = Player;
@@ -42,7 +42,7 @@ export default class GameScene extends THREE.Scene {
         // this.orbitals.update();
 
         // Add race track
-        this.track = new Track(this, "models/desert_map.glb");
+        this.track = new Track(this, "models/desert_map2.glb");
 
         // Add player
         this.player = new Player(this, "models/car2.glb");
@@ -72,8 +72,8 @@ export default class GameScene extends THREE.Scene {
             this.width = window.innerWidth;
             this.height = window.innerHeight;
 
-            this.camera.aspect = window.innerWidth / window.innerHeight;
-            this.camera.updateProjectionMatrix;
+            this.TPSCamera.aspect = window.innerWidth / window.innerHeight;
+            this.TPSCamera.updateProjectionMatrix;
             this.renderer.setSize(window.innerWidth, window.innerHeight);
         });
     }

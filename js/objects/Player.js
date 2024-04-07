@@ -4,7 +4,7 @@ import Car from './Car';
 
 export default class Player extends Car {
     scale = 0.03;
-    rotationAngle = Math.PI-0.10*Math.PI;
+    rotationAngle = 0.9*Math.PI;
 
     constructor(scene = THREE.Scene, modelURL = String) {
         super(scene, modelURL);
@@ -85,6 +85,8 @@ export default class Player extends Car {
     update() {
         if(!this.loading){
             this.handleInput();
+
+            // console.log(this.movementSpeed);
         
         // console.log(this.carScene.position.x, this.carScene.position.y, this.carScene.position.z);
         }
