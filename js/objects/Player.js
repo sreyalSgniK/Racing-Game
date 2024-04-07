@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import Car from './Car';
 // import { keyStates } from '../Controls';
+import { saveAs } from 'file-saver'; // Import FileSaver.js for file saving
 
 export default class Player extends Car {
     // scale = 0.03;
@@ -11,6 +12,8 @@ export default class Player extends Car {
 
         super.loadGLTF(this.modelURL, this.scene, this.scale, this.rotationAngle);
 
+        this.isLogging = false;
+        this.positions =[];
 
         this.keyStates = {};
 
@@ -48,6 +51,17 @@ export default class Player extends Car {
         this.carScene.position.x += this.movementSpeed * Math.sin(this.carScene.rotation.y) * deltaTime;
         this.carScene.position.z += this.movementSpeed * Math.cos(this.carScene.rotation.y) * deltaTime;
 
+        if (this.keyStates['KeyP']) {
+            this.keyStates['KeyP'] = false;
+            this.logPosition();
+            }
+
+
+        if (this.keyStates['KeyK']) {
+            this.keyStates['KeyK'] = false;
+            this.exportPositionsToFile();
+        }
+
         if (this.keyStates['KeyW']) {
     
             if(this.movementSpeed < this.maxForwardSpeed){
@@ -59,7 +73,7 @@ export default class Player extends Car {
         if (this.keyStates['KeyS']) {
     
             if(this.movementSpeed > this.maxBackwardSpeed){
-                this.movementSpeed -= this.acceleration * deltaTime;
+                this.movementSpeed -= this.acceleration * 2 * deltaTime;
             }
             
             // console.log("Down");
@@ -90,5 +104,37 @@ export default class Player extends Car {
         
         // console.log(this.carScene.position);
         }
+    }
+
+
+    logPosition() {
+        const currentPosition = this.carScene.position.clone();
+        this.positions.push(currentPosition);
+        console.log('Position logged:', currentPosition);
+    }
+
+    exportPositionsToFile() {
+        if (this.positions.length === 0) {
+            console.log('No positions logged.');
+            return;
+        }
+
+        // Format each position coordinate to 2 decimal places
+        const positionStrings = this.positions.map(pos => {
+            const formattedX = pos.x.toFixed(2);
+            const formattedY = pos.y.toFixed(2);
+            const formattedZ = pos.z.toFixed(2);
+            // return `(${formattedX}, ${formattedY}, ${formattedZ})`;
+            return `this.path.add(new YUKA.Vector3(${formattedX}, ${formattedY}, ${formattedZ}));`;
+        });
+        const positionsText = positionStrings.join('\n');
+
+        // Create a Blob containing all logged positions
+        const blob = new Blob([positionsText], { type: 'text/plain;charset=utf-8' });
+
+        // Use FileSaver.js to save the Blob as a text file
+        saveAs(blob, 'positions.txt');
+
+        console.log("Exported positions");
     }
 }

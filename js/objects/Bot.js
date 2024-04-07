@@ -21,14 +21,32 @@ export default class Bot extends Car {
         //TODO: move this to track class
         // Path for bot to follow
         this.path = new YUKA.Path();
-        this.path.add(new YUKA.Vector3(3.5, 0, 40));
-        this.path.add(new YUKA.Vector3(-3.2, 0, 290));
-        this.path.add(new YUKA.Vector3(-21.9, 0, 555.9));
-        this.path.add(new YUKA.Vector3(-33.5, 0, 650));
-        this.path.add(new YUKA.Vector3(-11.6, 0, 711.3));
-        this.path.add(new YUKA.Vector3(71.9, 0, 747.7));
-        this.path.add(new YUKA.Vector3(157.5, 0, 709.3));
-        this.path.add(new YUKA.Vector3(239.4, 0, 743.3));
+        this.path.add(new YUKA.Vector3(2.77, 0.00, 75.66));
+        this.path.add(new YUKA.Vector3(-6.04, 0.00, 322.62));
+        this.path.add(new YUKA.Vector3(-30.82, 0.00, 616.35));
+        this.path.add(new YUKA.Vector3(27.75, 0.00, 737.82));
+        this.path.add(new YUKA.Vector3(179.42, 0.00, 713.71));
+        this.path.add(new YUKA.Vector3(265.42, 0.00, 778.47));
+        this.path.add(new YUKA.Vector3(353.60, 0.00, 857.22));
+        this.path.add(new YUKA.Vector3(449.60, 0.00, 794.27));
+        this.path.add(new YUKA.Vector3(503.21, 0.00, 688.85));
+        this.path.add(new YUKA.Vector3(499.22, 0.00, 563.23));
+        this.path.add(new YUKA.Vector3(426.72, 0.00, 439.82));
+        this.path.add(new YUKA.Vector3(439.74, 0.00, 308.90));
+        this.path.add(new YUKA.Vector3(499.69, 0.00, 196.97));
+        this.path.add(new YUKA.Vector3(570.16, 0.00, 83.15));
+        this.path.add(new YUKA.Vector3(688.55, 0.00, 52.71));
+        this.path.add(new YUKA.Vector3(757.79, 0.00, 153.99));
+        this.path.add(new YUKA.Vector3(703.82, 0.00, 259.03));
+        this.path.add(new YUKA.Vector3(598.96, 0.00, 364.93));
+        this.path.add(new YUKA.Vector3(627.57, 0.00, 493.33));
+        this.path.add(new YUKA.Vector3(690.33, 0.00, 603.98));
+        this.path.add(new YUKA.Vector3(663.54, 0.00, 916.86));
+        this.path.add(new YUKA.Vector3(761.97, 0.00, 1094.38));
+        this.path.add(new YUKA.Vector3(909.76, 0.00, 1014.44));
+        this.path.add(new YUKA.Vector3(1127.03, 0.00, 622.34));
+        this.path.add(new YUKA.Vector3(1236.38, 0.00, 498.92));
+        this.path.add(new YUKA.Vector3(1405.58, 0.00, 463.51));
 
         const position = [];
         for(let i = 0; i < this.path._waypoints.length; i++) {
@@ -56,10 +74,7 @@ export default class Bot extends Car {
         this.entityManager.add(this.vehicle);
 
         // Add FollowPathBehavior to the steering behavior
-        this.followPathBehavior = new YUKA.FollowPathBehavior(this.path), {
-            arriveDistance: 10,        // Increase arrive distance
-            pathOffset: 2,            // Offset from the path to aim towards
-        };
+        this.followPathBehavior = new YUKA.FollowPathBehavior(this.path, 10);
 
         // this.followPathBehavior = new YUKA.FollowPathBehavior(this.path, {
         //     arriveDistance: 1,          // Distance threshold for considering a path point reached
@@ -95,7 +110,15 @@ export default class Bot extends Car {
     updateCarScene() {
         // Update the car's scene (model) based on the vehicle's position and rotation
         this.carScene.position.copy(this.vehicle.position);
-        // this.carScene.rotation.copy(this.vehicle.rotation);
+
+        // Calculate the direction vector from the vehicle's velocity
+        const direction = this.vehicle.velocity.clone().normalize();
+
+        // Calculate the rotation angle to align the model with the direction vector
+        const rotationAngle = Math.atan2(direction.x, direction.z);
+
+        // Set the rotation of the carScene to face the movement direction
+        this.carScene.rotation.y = rotationAngle;
     }
 
     loadGLTF(modelURL, scene, scale, rotationAngle, initialPosition) {

@@ -16,8 +16,8 @@ export default class Car {
     rotationSpeed = 0.5;
     acceleration = 10;
     maxForwardSpeed = 50;
-    maxBackwardSpeed = -2;
-    deceleration = 1;
+    maxBackwardSpeed = -20;
+    deceleration = 5;
     loading = true;
 
     constructor(scene = THREE.Scene, modelURL = String) {
