@@ -3,6 +3,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import  Player from "./objects/Player";
 import Track from "./objects/Track";
 import TPSCamera from "./TPSCamera";
+import Bot from "./objects/Bot";
 
 export default class GameScene extends THREE.Scene {
 
@@ -15,9 +16,13 @@ export default class GameScene extends THREE.Scene {
     // orbitals = OrbitControls;
 
 
-    player = Player;
+    
 
     track = Track;
+
+    player = Player;
+
+    bot = Bot;
 
 
 
@@ -47,6 +52,9 @@ export default class GameScene extends THREE.Scene {
         // Add player
         this.player = new Player(this, "models/car2.glb");
 
+        // Add bot  ||  TODO: change bot model
+        this.bot = new Bot(this, "models/car_blue.glb", new THREE.Vector3(12,0,0));
+
         // let geometry = new THREE.BoxGeometry( 1, 1, 1 );
         // let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
         // let cube = new THREE.Mesh( geometry, material );
@@ -68,28 +76,28 @@ export default class GameScene extends THREE.Scene {
 
 
         // Set up window resizing
-        window.addEventListener("resize", () => {
-            this.width = window.innerWidth;
-            this.height = window.innerHeight;
+        // window.addEventListener("resize", () => {
+        //     this.width = window.innerWidth;
+        //     this.height = window.innerHeight;
 
-            this.TPSCamera.aspect = window.innerWidth / window.innerHeight;
-            this.TPSCamera.updateProjectionMatrix;
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        //     this.TPSCamera.aspect = window.innerWidth / window.innerHeight;
+        //     this.TPSCamera.updateProjectionMatrix;
+        //     this.renderer.setSize(window.innerWidth, window.innerHeight);
+        // });
     }
 
 
 
-    update() {
-        if(!this.player.loading) {
+    update(deltaTime) {
 
-            this.player.update();
+        this.player.update(deltaTime);
+        
+        this.bot.update(deltaTime);
 
-            this.TPSCamera.update();
-
-        }
+        this.TPSCamera.update(deltaTime);
 
         this.renderer.render( this, this.TPSCamera.camera );
+        // this.renderer.render( this, this.camera );
     }
 
 }

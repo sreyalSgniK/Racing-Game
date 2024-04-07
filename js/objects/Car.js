@@ -7,16 +7,18 @@ export default class Car {
     
     modelURL = "";
 
-    scale = 1;
+    scale = 0.03;
+    rotationAngle = 0.9*Math.PI;
 
     carScene = null;
 
     movementSpeed = 0;
-    rotationSpeed = 0.005;
-    acceleration = 0.001;
-    maxForwardSpeed = 0.5;
-    maxBackwardSpeed = -0.2;
-    deceleration = 0.001;
+    rotationSpeed = 0.5;
+    acceleration = 10;
+    maxForwardSpeed = 50;
+    maxBackwardSpeed = -2;
+    deceleration = 1;
+    loading = true;
 
     constructor(scene = THREE.Scene, modelURL = String) {
         this.scene = scene;
@@ -33,7 +35,6 @@ export default class Car {
     }
 
     loadGLTF(modelURL, scene, scale, rotationAngle) {
-        this.loading = true; // Set loading flag to true
         let loader = new GLTFLoader();
         loader.load(
             // resource URL
