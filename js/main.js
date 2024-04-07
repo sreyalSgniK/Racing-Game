@@ -1,4 +1,4 @@
-import GameScene from ".`/GameScene";
+import GameScene from "./GameScene";
 
 const scene = new GameScene();
 
