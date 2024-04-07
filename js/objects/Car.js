@@ -13,11 +13,11 @@ export default class Car {
     carScene = null;
 
     movementSpeed = 0;
-    rotationSpeed = 0.5;
+    rotationSpeed = 1;
     acceleration = 10;
     maxForwardSpeed = 50;
     maxBackwardSpeed = -20;
-    deceleration = 5;
+    deceleration = 3;
     loading = true;
 
     constructor(scene = THREE.Scene, modelURL = String) {
