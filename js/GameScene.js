@@ -21,10 +21,13 @@ export default class GameScene extends THREE.Scene {
 
     bot = Bot;
 
-
+    debugMode = true;
 
     constructor() {
         super();
+
+
+        this.debugMode = true;
         
         // Set up scene
         this.background = new THREE.Color(0x808080); // Set background color to grey

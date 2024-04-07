@@ -22,7 +22,7 @@ function animate() {
     fpsTime += deltaTime;
     if (fpsTime >= 1.0) {
         const fps = fpsCounter / fpsTime;
-        // console.log(`FPS: ${fps.toFixed(2)}`);
+        console.log(`FPS: ${fps.toFixed(2)}`);
         fpsCounter = 0;
         fpsTime = 0;
     }

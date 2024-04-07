@@ -154,38 +154,41 @@ export default class Track {
             { x: 1508.33, y: 0.00, z: 416.73}
         ];
 
-        const rightBoundary = [];
+        this.leftBoundary = [];
 
         coordinates.forEach(coord => {
             const vector = new THREE.Vector3(coord.x, coord.y, coord.z);
-            rightBoundary.push(vector);
+            this.leftBoundary.push(vector);
         });
 
+        if(this.scene.debugMode) {
 
-        const positions = [];
 
-        // Iterate through the waypoints to create line segments
-        for (let i = 0; i < rightBoundary.length - 1; i++) {
-            const currentPoint = rightBoundary[i];
-            const nextPoint = rightBoundary[i + 1];
+            const positions = [];
 
-            // Add current point
-            positions.push(currentPoint.x, currentPoint.y, currentPoint.z);
+            // Iterate through the waypoints to create line segments
+            for (let i = 0; i < this.leftBoundary.length - 1; i++) {
+                const currentPoint = this.leftBoundary[i];
+                const nextPoint = this.leftBoundary[i + 1];
 
-            // Add next point
-            positions.push(nextPoint.x, nextPoint.y, nextPoint.z);
+                // Add current point
+                positions.push(currentPoint.x, currentPoint.y, currentPoint.z);
+
+                // Add next point
+                positions.push(nextPoint.x, nextPoint.y, nextPoint.z);
+            }
+
+            const lineMaterial = new THREE.LineBasicMaterial({color: 0xFF0000});
+            const lineGeometry = new THREE.BufferGeometry();
+
+            lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+            // Create the line object with individual segments
+            const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+            // Add the line to the scene
+            this.scene.add(lines);
         }
-
-        const lineMaterial = new THREE.LineBasicMaterial({color: 0xFF0000});
-        const lineGeometry = new THREE.BufferGeometry();
-
-        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-
-        // Create the line object with individual segments
-        const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-
-        // Add the line to the scene
-        this.scene.add(lines);
     }
 
     drawRightSideBoundary() {
@@ -316,38 +319,42 @@ export default class Track {
             { x: 1540.13, y: 0.00, z: 475.57}
         ];
 
-        const rightBoundary = [];
+        this.rightBoundary = [];
 
         coordinates.forEach(coord => {
             const vector = new THREE.Vector3(coord.x, coord.y, coord.z);
-            rightBoundary.push(vector);
+            this.rightBoundary.push(vector);
         });
 
+        // console.log(this.rightBoundary[0].x);
 
-        const positions = [];
+        if(this.scene.debugMode) {
 
-        // Iterate through the waypoints to create line segments
-        for (let i = 0; i < rightBoundary.length - 1; i++) {
-            const currentPoint = rightBoundary[i];
-            const nextPoint = rightBoundary[i + 1];
+            const positions = [];
 
-            // Add current point
-            positions.push(currentPoint.x, currentPoint.y, currentPoint.z);
+            // Iterate through the waypoints to create line segments
+            for (let i = 0; i < this.rightBoundary.length - 1; i++) {
+                const currentPoint = this.rightBoundary[i];
+                const nextPoint = this.rightBoundary[i + 1];
 
-            // Add next point
-            positions.push(nextPoint.x, nextPoint.y, nextPoint.z);
+                // Add current point
+                positions.push(currentPoint.x, currentPoint.y, currentPoint.z);
+
+                // Add next point
+                positions.push(nextPoint.x, nextPoint.y, nextPoint.z);
+            }
+
+            const lineMaterial = new THREE.LineBasicMaterial({color: 0xFF0000});
+            const lineGeometry = new THREE.BufferGeometry();
+
+            lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+            // Create the line object with individual segments
+            const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+            // Add the line to the scene
+            this.scene.add(lines);
         }
-
-        const lineMaterial = new THREE.LineBasicMaterial({color: 0xFF0000});
-        const lineGeometry = new THREE.BufferGeometry();
-
-        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-
-        // Create the line object with individual segments
-        const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-
-        // Add the line to the scene
-        this.scene.add(lines);
     }
 
     // Draw the path for bots to follow
@@ -383,30 +390,32 @@ export default class Track {
 
         
 
-        const positions = [];
+        if(this.scene.debugMode) {
+            const positions = [];
 
-        // Iterate through the waypoints to create line segments
-        for (let i = 0; i < this.path._waypoints.length - 1; i++) {
-            const currentPoint = this.path._waypoints[i];
-            const nextPoint = this.path._waypoints[i + 1];
+            // Iterate through the waypoints to create line segments
+            for (let i = 0; i < this.path._waypoints.length - 1; i++) {
+                const currentPoint = this.path._waypoints[i];
+                const nextPoint = this.path._waypoints[i + 1];
 
-            // Add current point
-            positions.push(currentPoint.x, currentPoint.y, currentPoint.z);
+                // Add current point
+                positions.push(currentPoint.x, currentPoint.y, currentPoint.z);
 
-            // Add next point
-            positions.push(nextPoint.x, nextPoint.y, nextPoint.z);
+                // Add next point
+                positions.push(nextPoint.x, nextPoint.y, nextPoint.z);
+            }
+
+            const lineMaterial = new THREE.LineBasicMaterial({color: 0x0000FF});
+            const lineGeometry = new THREE.BufferGeometry();
+
+            lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+            // Create the line object with individual segments
+            const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+            // Add the line to the scene
+            this.scene.add(lines);
         }
-
-        const lineMaterial = new THREE.LineBasicMaterial({color: 0x0000FF});
-        const lineGeometry = new THREE.BufferGeometry();
-
-        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-
-        // Create the line object with individual segments
-        const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-
-        // Add the line to the scene
-        this.scene.add(lines);
     }
 
     setGLTFPosition(trackScene,x,y,z){

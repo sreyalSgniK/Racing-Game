@@ -12,6 +12,7 @@ export default class Bot extends Car {
     acceleration = 2;
     maxSpeed = 50;
     deceleration = 1;
+    velocity = 0;
 
 
     constructor(scene, modelURL, initialPosition, track) {
@@ -20,8 +21,15 @@ export default class Bot extends Car {
 
         this.track = track;
 
+        this.velocity = new THREE.Vector3(0,0,0);
 
-        this.loadGLTF(modelURL, scene, this.scale, this.rotationAngle, initialPosition);
+
+        super.loadGLTF(this.modelURL, this.scene, this.scale, this.rotationAngle).then(() => {
+            super.setupHitbox();
+        })
+        .catch((error) => {
+            console.error('Error loading model:', error);
+        });
 
         this.initializeAI();
     }
@@ -61,6 +69,20 @@ export default class Bot extends Car {
         if (!this.loading) {
             this.entityManager.update(deltaTime);
             this.updateCarScene(); // Update car's scene based on vehicle's position and rotation
+
+            // Update the position of the hitbox to match the carScene position
+            if (this.hitbox && this.carScene) {
+                this.boundingBox = new THREE.Box3().setFromObject(this.carScene);
+                this.hitbox.position.copy(this.boundingBox.getCenter(new THREE.Vector3()));
+                this.hitbox.rotation.copy(this.carScene.rotation);
+            }
+
+            this.previousPosition = this.carScene.position.clone();
+            this.carScene.position.add(this.velocity.clone().multiplyScalar(deltaTime));
+
+            // Calculate approximate velocity
+            const deltaPosition = this.carScene.position.clone().sub(this.previousPosition);
+            this.velocity = deltaPosition.divideScalar(deltaTime);
 
             // console.log(this.vehicle.initialPosition);
         }
