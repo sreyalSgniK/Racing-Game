@@ -386,7 +386,7 @@ export default class Track {
         this.path.add(new YUKA.Vector3(909.76, 0.00, 1014.44));
         this.path.add(new YUKA.Vector3(1127.03, 0.00, 622.34));
         this.path.add(new YUKA.Vector3(1236.38, 0.00, 498.92));
-        this.path.add(new YUKA.Vector3(1405.58, 0.00, 463.51));
+        this.path.add(new YUKA.Vector3(1500.58, 0.00, 451.51));
 
         
 

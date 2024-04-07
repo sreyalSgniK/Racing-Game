@@ -17,7 +17,7 @@ export default class Car {
     movementSpeed = 0;
     rotationSpeed = 0.8;
     acceleration = 10;
-    maxForwardSpeed = 80;
+    maxForwardSpeed = 75;
     maxBackwardSpeed = -30;
     deceleration = 3;
     turnDeceleration = 8;

@@ -145,21 +145,24 @@ export default class Player extends Car {
     }
 
     // Function to handle collisions with swept AABB
-    handleCollisions(playerSweptBox, botBox, leftBoundary, rightBoundary) {
+    handleCollisions(playerSweptBox, botBox, leftBoundary, rightBoundary, deltaTime) {
         // Check for collision with the bot
         if (playerSweptBox.intersectsBox(botBox)) {
             // Resolve collision with the bot (e.g., separate objects)
             this.resolveCollision(this.carScene, this.scene.bot.carScene);
+            this.movementSpeed -= this.acceleration * 2 *deltaTime;
         }
 
         // Check collision with the left boundary
         if (boxIntersectsPath(playerSweptBox, leftBoundary)) {
             // Push player away from the left boundary
+            this.movementSpeed -= this.acceleration * 2 *deltaTime;
         }
 
         // Check collision with the right boundary
         if (boxIntersectsPath(playerSweptBox, rightBoundary)) {
             // Push player away from the right boundary
+            this.movementSpeed -= this.acceleration * 2 *deltaTime;
         }
     }
 
@@ -167,8 +170,8 @@ export default class Player extends Car {
     resolveCollision(object1, object2) {
         // Example: Separate objects along the collision normal
         const separation = object1.position.clone().sub(object2.position).normalize();
-        object1.position.add(separation.clone().multiplyScalar(0.3)); // Move object1 away
-        object2.position.sub(separation.clone().multiplyScalar(0.3)); // Move object2 away
+        object1.position.add(separation.clone().multiplyScalar(0.2)); // Move object1 away
+        object2.position.sub(separation.clone().multiplyScalar(0.2)); // Move object2 away
     }
 
 
@@ -216,7 +219,7 @@ export default class Player extends Car {
             const playerSweptBox = this.getSweptAABB(this.boundingBox, this.velocity);
 
             // Check collisions and handle physics
-            this.handleCollisions(playerSweptBox, this.scene.bot.boundingBox, this.scene.track.leftBoundary, this.scene.track.rightBoundary);
+            this.handleCollisions(playerSweptBox, this.scene.bot.boundingBox, this.scene.track.leftBoundary, this.scene.track.rightBoundary, deltaTime);
 
             // Update the material of the hitbox based on collision state
             const collisionMaterial = new THREE.MeshBasicMaterial({

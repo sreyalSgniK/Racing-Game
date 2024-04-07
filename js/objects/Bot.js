@@ -9,9 +9,9 @@ export default class Bot extends Car {
     initialRotation = THREE.Quaternion;
 
 
-    acceleration = 2;
-    maxSpeed = 50;
-    deceleration = 1;
+    acceleration = 3;
+    maxSpeed = 80;
+    deceleration = 2;
     velocity = 0;
 
 
@@ -41,7 +41,7 @@ export default class Bot extends Car {
         this.entityManager.add(this.vehicle);
 
         // Add FollowPathBehavior to the steering behavior
-        this.followPathBehavior = new YUKA.FollowPathBehavior(this.track.path, 10);
+        this.followPathBehavior = new YUKA.FollowPathBehavior(this.track.path, 15);
 
         // this.followPathBehavior = new YUKA.FollowPathBehavior(this.path, {
         //     arriveDistance: 1,          // Distance threshold for considering a path point reached
