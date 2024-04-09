@@ -9,42 +9,27 @@ export default class Bot extends Car {
     initialRotation = THREE.Quaternion;
 
 
-    acceleration = 0.08;
-    maxSpeed = 30;
-    deceleration = 0.05;
+    acceleration = 3;
+    maxSpeed = 80;
+    deceleration = 2;
+    velocity = 0;
 
 
-    constructor(scene, modelURL, initialPosition) {
+    constructor(scene, modelURL, initialPosition, track) {
         super(scene, modelURL);
         this.initialPosition = initialPosition;
 
-        //TODO: move this to track class
-        // Path for bot to follow
-        this.path = new YUKA.Path();
-        this.path.add(new YUKA.Vector3(3.5, 0, 40));
-        this.path.add(new YUKA.Vector3(-3.2, 0, 290));
-        this.path.add(new YUKA.Vector3(-21.9, 0, 555.9));
-        this.path.add(new YUKA.Vector3(-33.5, 0, 650));
-        this.path.add(new YUKA.Vector3(-11.6, 0, 711.3));
-        this.path.add(new YUKA.Vector3(71.9, 0, 747.7));
-        this.path.add(new YUKA.Vector3(157.5, 0, 709.3));
-        this.path.add(new YUKA.Vector3(239.4, 0, 743.3));
+        this.track = track;
 
-        const position = [];
-        for(let i = 0; i < this.path._waypoints.length; i++) {
-            const waypoint = this.path._waypoints[i];
-            position.push(waypoint.x, waypoint.y, waypoint.z);
-        }
-
-        const lineGeometry = new THREE.BufferGeometry();
-        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-
-        const lineMaterial = new THREE.LineBasicMaterial();
-        const lines = new THREE.LineLoop(lineGeometry, lineMaterial);
-        scene.add(lines);
+        this.velocity = new THREE.Vector3(0,0,0);
 
 
-        this.loadGLTF(modelURL, scene, this.scale, this.rotationAngle, initialPosition);
+        super.loadGLTF(this.modelURL, this.scene, this.scale, this.rotationAngle).then(() => {
+            super.setupHitbox();
+        })
+        .catch((error) => {
+            console.error('Error loading model:', error);
+        });
 
         this.initializeAI();
     }
@@ -56,10 +41,7 @@ export default class Bot extends Car {
         this.entityManager.add(this.vehicle);
 
         // Add FollowPathBehavior to the steering behavior
-        this.followPathBehavior = new YUKA.FollowPathBehavior(this.path), {
-            arriveDistance: 10,        // Increase arrive distance
-            pathOffset: 2,            // Offset from the path to aim towards
-        };
+        this.followPathBehavior = new YUKA.FollowPathBehavior(this.track.path, 15);
 
         // this.followPathBehavior = new YUKA.FollowPathBehavior(this.path, {
         //     arriveDistance: 1,          // Distance threshold for considering a path point reached
@@ -88,6 +70,20 @@ export default class Bot extends Car {
             this.entityManager.update(deltaTime);
             this.updateCarScene(); // Update car's scene based on vehicle's position and rotation
 
+            // Update the position of the hitbox to match the carScene position
+            if (this.hitbox && this.carScene) {
+                this.boundingBox = new THREE.Box3().setFromObject(this.carScene);
+                this.hitbox.position.copy(this.boundingBox.getCenter(new THREE.Vector3()));
+                this.hitbox.rotation.copy(this.carScene.rotation);
+            }
+
+            this.previousPosition = this.carScene.position.clone();
+            this.carScene.position.add(this.velocity.clone().multiplyScalar(deltaTime));
+
+            // Calculate approximate velocity
+            const deltaPosition = this.carScene.position.clone().sub(this.previousPosition);
+            this.velocity = deltaPosition.divideScalar(deltaTime);
+
             // console.log(this.vehicle.initialPosition);
         }
     }
@@ -95,7 +91,15 @@ export default class Bot extends Car {
     updateCarScene() {
         // Update the car's scene (model) based on the vehicle's position and rotation
         this.carScene.position.copy(this.vehicle.position);
-        // this.carScene.rotation.copy(this.vehicle.rotation);
+
+        // Calculate the direction vector from the vehicle's velocity
+        const direction = this.vehicle.velocity.clone().normalize();
+
+        // Calculate the rotation angle to align the model with the direction vector
+        const rotationAngle = Math.atan2(direction.x, direction.z);
+
+        // Set the rotation of the carScene to face the movement direction
+        this.carScene.rotation.y = rotationAngle;
     }
 
     loadGLTF(modelURL, scene, scale, rotationAngle, initialPosition) {
