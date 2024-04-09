@@ -11,6 +11,29 @@ body{
     align-content: center;
     animation: go 5s linear 1s infinite;
 }
+
+
+#speedContainer {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 24px;
+    height: 300px;
+    border: 2px solid #2980b9;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+
+#speedBar {
+    width: 100%;
+    background-color: #3498db;
+    transition: height 0.1s ease-out;
+    transform-origin: top;
+}
+
 @keyframes go {
     0% {
         background-color: rgb(170, 136, 85); /* Màu nâu núi ở điểm xuất phát */
