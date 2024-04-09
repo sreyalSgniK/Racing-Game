@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/stylesMenu.css">
+    <link rel="stylesheet" href="css/style.css">
     <title>Racing-Game</title>
 </head>
 <body>
@@ -12,7 +12,6 @@
     </div>
     <div id="menu">
         <button id="playButton">Play</button>
-        <!-- <button id="optionButton">Option</button> -->
         <button id="instructionButton">Instruction</button>
     </div>
 
@@ -187,25 +186,6 @@
         </g>
     </svg>
     
-    <script>
-
-        document.getElementById('playButton').addEventListener('click', function() {
-            var menuDiv = document.getElementById('menu');
-            var optionsDiv = document.getElementById('options');
-            
-            if (optionsDiv.style.display === 'none' || optionsDiv.style.display === '') {
-                // Ẩn các nút Play, Option, Instruction
-                menuDiv.style.display = 'none';
-                // Hiển thị các nút Easy, Medium, Hard
-                optionsDiv.style.display = 'block';
-            } else {
-                // Ẩn các nút Easy, Medium, Hard
-                optionsDiv.style.display = 'none';
-                // Hiển thị các nút Play, Option, Instruction
-                menuDiv.style.display = 'flex'; // hoặc 'block' tùy thuộc vào kiểu hiển thị của phần tử menu
-            }
-        });
-    </script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
