@@ -73,6 +73,7 @@ function setDifficulty(newDifficulty) {
     difficulty = newDifficulty;
 }
 
+
 function animate() {
     requestAnimationFrame(animate);
 
