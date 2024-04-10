@@ -8,6 +8,8 @@ let lastFrameTime = performance.now();
 let fpsCounter = 0;
 let fpsTime = 0;
 
+
+
 document.getElementById('playButton').addEventListener('click', function() {
     var menuDiv = document.getElementById('menu');
     var optionsDiv = document.getElementById('options');
@@ -39,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add click event listeners to the buttons
     easyButton.addEventListener('click', function() {
-        console.log("easy");
+        // console.log("easy");
         options.style.display = 'none';
         car.style.display = 'none';
         speedContainer.style.display = 'flex';
@@ -49,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     normalButton.addEventListener('click', function() {
-        console.log("normal");
+        // console.log("normal");
         options.style.display = 'none';
         car.style.display = 'none';
         speedContainer.style.display = 'flex';
@@ -59,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     hardButton.addEventListener('click', function() {
-        console.log("hard");
+        // console.log("hard");
         options.style.display = 'none';
         car.style.display = 'none';
         speedContainer.style.display = 'flex';
@@ -73,6 +75,34 @@ function setDifficulty(newDifficulty) {
     difficulty = newDifficulty;
 }
 
+function startCountdown() {
+    let countdownTime = 3;
+    const countdownInterval = setInterval(() => {
+        console.log(countdownTime);
+        countdownTime--;
+
+        if (countdownTime === 0) {
+            clearInterval(countdownInterval);
+            currentState = GAME_STATES.RUNNING;
+            countingDown = false;
+            // Hide countdown UI
+            let countDownOverlay = document.getElementById('countDownOverlay');
+            countDownOverlay.style.display = 'none';
+        }
+    }, 1000);
+}
+
+
+// Show finish overlay and handle transition
+function showFinishOverlay() {
+    if (scene.playerPosition == 1) {
+        const firstPlaceOverlay = document.getElementById('firstPlaceOverlay');
+        firstPlaceOverlay.classList.add('show');
+    } else if (scene.playerPosition == 2) {
+        const secondPlaceOverlay = document.getElementById('secondPlaceOverlay');
+        secondPlaceOverlay.classList.add('show');
+    }
+}
 
 function animate() {
     requestAnimationFrame(animate);
@@ -82,15 +112,37 @@ function animate() {
     const deltaTime = (currentTime - lastFrameTime) / 1000; // Convert to seconds
     lastFrameTime = currentTime;
 
-    // Update the scene with delta time
-    scene.update(deltaTime);
+    switch(scene.currentState) {
+        case scene.GAME_STATES.COUNTDOWN:
+            // startCountdown();
+            break;
+
+        case scene.GAME_STATES.RUNNING:
+            scene.update(deltaTime);
+            break;
+
+        case scene.GAME_STATES.PAUSED:
+
+
+            break;
+
+        case scene.GAME_STATES.FINISHED:
+            showFinishOverlay();
+
+            break;
+        
+        default:
+            break;
+    }
+
+    
 
     // Calculate FPS
     fpsCounter++;
     fpsTime += deltaTime;
     if (fpsTime >= 1.0) {
         const fps = fpsCounter / fpsTime;
-        console.log(`FPS: ${fps.toFixed(2)}`);
+        // console.log(`FPS: ${fps.toFixed(2)}`);
         fpsCounter = 0;
         fpsTime = 0;
     }

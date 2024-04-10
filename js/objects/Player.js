@@ -2,19 +2,27 @@ import * as THREE from 'three';
 import Car from './Car';
 // import { keyStates } from '../Controls';
 import { saveAs } from 'file-saver'; // Import FileSaver.js for file saving
-import { boxIntersectsPath} from '../utils';
+import { boxIntersectsPath, getRotationMatrix, createOBBWireframe} from '../utils';
+import Track from './Track';
 
 export default class Player extends Car {
 
-    boxHelper = THREE.BoxHelper;
     hitbox = THREE.Mesh;
 
     velocity = THREE.Vector3;
 
-    constructor(scene = THREE.Scene, modelURL = String) {
-        super(scene, modelURL);
+    track = Track;
+
+    checkpointNumber = 0;
+
+    constructor(scene = THREE.Scene, modelURL = String, initialPosition = THREE.Vector3) {
+        super(scene, modelURL, initialPosition);
 
         this.velocity = new THREE.Vector3(0,0,0);
+
+        this.track = scene.track;
+
+        this.checkpointNumber = 0;
 
         super.loadGLTF(this.modelURL, this.scene, this.scale, this.rotationAngle).then(() => {
             super.setupHitbox();
@@ -27,6 +35,9 @@ export default class Player extends Car {
         this.positions =[];
 
         this.keyStates = {};
+
+        // this.axesHelper = new THREE.AxesHelper(5);
+        // this.scene.add(this.axesHelper);
 
         // Handle key press events
         const handleKeyDown = (event) => {
@@ -60,12 +71,6 @@ export default class Player extends Car {
             }
         }
         
-    
-        // if (this.keyStates['KeyL']) {
-        //     this.keyStates['KeyL'] = false;
-        //     this.boxHelper = new THREE.BoxHelper(this.carScene, 0xffff00);
-        //     this.scene.add(this.boxHelper); 
-        // }
 
         if (this.keyStates['KeyP']) {
             this.keyStates['KeyP'] = false;
@@ -81,7 +86,11 @@ export default class Player extends Car {
         if (this.keyStates['KeyW']) {
     
             if(this.movementSpeed < this.maxForwardSpeed){
-                this.movementSpeed += this.acceleration * deltaTime;
+                if(this.movementSpeed > 0) {
+                    this.movementSpeed += this.acceleration * deltaTime;
+                } else {
+                    this.movementSpeed += this.acceleration * 2 * deltaTime;
+                }
             }
             
             // console.log("Up");
@@ -89,22 +98,40 @@ export default class Player extends Car {
         if (this.keyStates['KeyS']) {
     
             if(this.movementSpeed > this.maxBackwardSpeed){
-                this.movementSpeed -= this.acceleration * 2 * deltaTime;
+                if(this.movementSpeed > 0) {
+                    this.movementSpeed -= this.acceleration * 2 * deltaTime;
+                } else {
+                    this.movementSpeed -= this.acceleration * deltaTime;
+                }
             }
             
             // console.log("Down");
         }
         if (this.keyStates['KeyA']) {
+            if (this.movementSpeed > 0) {
+                this.movementSpeed -= this.turnDeceleration * deltaTime;
+                this.carScene.rotation.y += this.rotationSpeed * deltaTime;
+            } else {
+                this.movementSpeed += this.turnDeceleration * deltaTime;
+                this.carScene.rotation.y -= this.rotationSpeed * deltaTime;
+            }
     
-            this.carScene.rotation.y += this.rotationSpeed * deltaTime;
-            (this.movementSpeed > 0) ? this.movementSpeed -= this.turnDeceleration * deltaTime : this.movementSpeed += this.turnDeceleration * deltaTime;
+            // this.carScene.rotation.y += this.rotationSpeed * deltaTime;
+            // (this.movementSpeed > 0) ? this.movementSpeed -= this.turnDeceleration * deltaTime : this.movementSpeed += this.turnDeceleration * deltaTime;
             
             // console.log("Left");
         }
         if (this.keyStates['KeyD']) {
+            if (this.movementSpeed < 0) {
+                this.movementSpeed += this.turnDeceleration * deltaTime;
+                this.carScene.rotation.y += this.rotationSpeed * deltaTime;
+            } else {
+                this.movementSpeed -= this.turnDeceleration * deltaTime;
+                this.carScene.rotation.y -= this.rotationSpeed * deltaTime;
+            }
     
-            this.carScene.rotation.y -= this.rotationSpeed * deltaTime;
-            (this.movementSpeed > 0) ? this.movementSpeed -= this.turnDeceleration * deltaTime : this.movementSpeed += this.turnDeceleration * deltaTime;
+            // this.carScene.rotation.y -= this.rotationSpeed * deltaTime;
+            // (this.movementSpeed > 0) ? this.movementSpeed -= this.turnDeceleration * deltaTime : this.movementSpeed += this.turnDeceleration * deltaTime;
             
             // console.log("Right");
         }
@@ -113,56 +140,54 @@ export default class Player extends Car {
         this.carScene.position.z += this.movementSpeed * Math.cos(this.carScene.rotation.y) * deltaTime;
         
         
-        // console.log(this.movementSpeed);
     }
 
-    
 
-    // Function to calculate swept AABB (Axis-Aligned Bounding Box)
-    getSweptAABB(box, velocity) {
-        const min = box.min.clone();
-        const max = box.max.clone();
+    // Function to handle collisions with OBB
+    handleCollisions(playerOBB, botOBB, leftBoundaryHitbox, rightBoundaryHitbox, deltaTime) {
 
-        if (velocity.x < 0) {
-            min.x += velocity.x;
-        } else {
-            max.x += velocity.x;
-        }
+        // Update the material of the hitbox based on collision state
+        const collisionMaterial = new THREE.MeshBasicMaterial({
+            color: 0xFF0000, // Red color indicates collision
+            visible: this.scene.debugMode,
+            wireframe: true
+        });
 
-        if (velocity.y < 0) {
-            min.y += velocity.y;
-        } else {
-            max.y += velocity.y;
-        }
+        const noCollisionMaterial = new THREE.MeshBasicMaterial({
+            color: 0xFFFFFF, // White color indicates no collision
+            visible: this.scene.debugMode,
+            wireframe: true
+        });
 
-        if (velocity.z < 0) {
-            min.z += velocity.z;
-        } else {
-            max.z += velocity.z;
-        }
+        // Apply the appropriate material based on collision state
+        this.hitbox.material = this.boundingBox.intersectsOBB(this.scene.bot.boundingBox) ||
+                                boxIntersectsPath(this.boundingBox, leftBoundaryHitbox) ||
+                                boxIntersectsPath(this.boundingBox, rightBoundaryHitbox)
+            ? collisionMaterial : noCollisionMaterial;
 
-        return new THREE.Box3(min, max);
-    }
 
-    // Function to handle collisions with swept AABB
-    handleCollisions(playerSweptBox, botBox, leftBoundary, rightBoundary, deltaTime) {
         // Check for collision with the bot
-        if (playerSweptBox.intersectsBox(botBox)) {
+        if (playerOBB.intersectsOBB(botOBB)) {
             // Resolve collision with the bot (e.g., separate objects)
             this.resolveCollision(this.carScene, this.scene.bot.carScene);
             this.movementSpeed -= this.acceleration * 2 *deltaTime;
+            console.log("Hit car");
         }
 
         // Check collision with the left boundary
-        if (boxIntersectsPath(playerSweptBox, leftBoundary)) {
+        if (boxIntersectsPath(playerOBB, leftBoundaryHitbox)) {
             // Push player away from the left boundary
-            this.movementSpeed -= this.acceleration * 2 *deltaTime;
+            console.log("Hit left wall");
+
+            // this.resetToLastCheckpoint();
         }
 
         // Check collision with the right boundary
-        if (boxIntersectsPath(playerSweptBox, rightBoundary)) {
+        if (boxIntersectsPath(playerOBB, rightBoundaryHitbox)) {
             // Push player away from the right boundary
-            this.movementSpeed -= this.acceleration * 2 *deltaTime;
+            console.log("Hit right wall");
+
+            // this.resetToLastCheckpoint();
         }
     }
 
@@ -174,85 +199,80 @@ export default class Player extends Car {
         object2.position.sub(separation.clone().multiplyScalar(0.2)); // Move object2 away
     }
 
+    handleFinish(playerOBB, finishLineHitbox) {
+        if (playerOBB.intersectsOBB(finishLineHitbox) ){
+            console.log("Player finished");
+            this.hitbox.material = new THREE.MeshBasicMaterial({
+                color: 0xA020F0,
+                visible: this.scene.debugMode,
+                wireframe: true
+            });
+            if(this.scene.playerPosition == 0) {
+                this.scene.playerPosition = 1;
+            }
+            this.scene.currentState = this.scene.GAME_STATES.FINISHED;
+        }
+
+        
+    }
+
+    handleCheckpoints(playerOBB, checkpointHitbox) {
+        // console.log(checkpointHitbox);
+        if(playerOBB.intersectsOBB(checkpointHitbox[this.checkpointNumber])) {
+            console.log("Passed checkpoint ", this.checkpointNumber);
+            this.checkpointNumber++;
+            this.hitbox.material = new THREE.MeshBasicMaterial({
+                color: 0xFFFF00,
+                visible: this.scene.debugMode,
+                wireframe: true
+            });
+        }
+
+    }
+
+    resetToLastCheckpoint() {
+        this.movementSpeed = 0;
+        const lastCheckpoint = (this.checkpointNumber==0) ? 0 : this.checkpointNumber-1;
+        this.carScene.position.copy(this.track.checkpointHitbox[lastCheckpoint].center);
+
+    }
 
 
     update(deltaTime) {
         if(!this.loading){
+
             this.handleInput(deltaTime);
-
-            // console.log(this.movementSpeed);
-
-            // console.log(this.carScene.position);
 
             // Update speed bar height (based on movementSpeed between 0 and maxForwardSpeed)
             const normalizedSpeed = (this.movementSpeed > 0) ? Math.min(Math.max(this.movementSpeed, 0), this.maxForwardSpeed) : Math.min(Math.max(Math.abs(this.movementSpeed), 0), this.maxForwardSpeed);
             const normalizedHeight = (normalizedSpeed / this.maxForwardSpeed) * 200; // Map speed to bar height (200px max)
 
             this.speedBarElement.style.height = `${normalizedHeight}px`;
-
             
-        
             // Update the position of the hitbox to match the carScene position
             if (this.hitbox && this.carScene) {
-                this.boundingBox = new THREE.Box3().setFromObject(this.carScene);
-                
-                this.hitbox.position.copy(this.boundingBox.getCenter(new THREE.Vector3()));
+                const box = new THREE.Box3().setFromObject(this.carScene);
+                const boxCenter = box.getCenter(new THREE.Vector3());
+
+                this.boundingBox.center.copy(boxCenter);
+                this.boundingBox.rotation = getRotationMatrix(this.carScene.rotation);
+
+                this.hitbox.position.copy(boxCenter);
                 this.hitbox.rotation.copy(this.carScene.rotation);
             }
-
-            // if(this.boundingBox.intersectsBox(this.scene.bot.boundingBox) || boxIntersectsPath(this.boundingBox, this.scene.track.leftBoundary) || boxIntersectsPath(this.boundingBox, this.scene.track.rightBoundary)) 
-            // {
-            //     const newMaterial = new THREE.MeshBasicMaterial({ color: 0xFF0000, visible: this.scene.debugMode, wireframe: true });
-            //     this.hitbox.material = newMaterial;
-            // } else {
-            //     const newMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, visible: this.scene.debugMode, wireframe: true });
-            //     this.hitbox.material = newMaterial;
-            // }
-
-            this.previousPosition = this.carScene.position.clone();
-            this.carScene.position.add(this.velocity.clone().multiplyScalar(deltaTime));
-
-            // Calculate approximate velocity
-            const deltaPosition = this.carScene.position.clone().sub(this.previousPosition);
-            this.velocity = deltaPosition.divideScalar(deltaTime);
-
-            const playerSweptBox = this.getSweptAABB(this.boundingBox, this.velocity);
+            
 
             // Check collisions and handle physics
-            this.handleCollisions(playerSweptBox, this.scene.bot.boundingBox, this.scene.track.leftBoundary, this.scene.track.rightBoundary, deltaTime);
+            this.handleCollisions(this.boundingBox, this.scene.bot.boundingBox, this.track.leftBoundaryHitbox, this.track.rightBoundaryHitbox, deltaTime);
 
-            // Update the material of the hitbox based on collision state
-            const collisionMaterial = new THREE.MeshBasicMaterial({
-                color: 0xFF0000, // Red color indicates collision
-                visible: this.scene.debugMode,
-                wireframe: true
-            });
+            // this.handleCheckpoints(this.boundingBox, this.track.checkpointHitbox);
 
-            const noCollisionMaterial = new THREE.MeshBasicMaterial({
-                color: 0xFFFFFF, // White color indicates no collision
-                visible: this.scene.debugMode,
-                wireframe: true
-            });
+            this.handleFinish(this.boundingBox, this.track.finishLineHitbox);
 
-            // Apply the appropriate material based on collision state
-            this.hitbox.material = this.boundingBox.intersectsBox(this.scene.bot.boundingBox) ||
-                                    boxIntersectsPath(this.boundingBox, this.scene.track.leftBoundary) ||
-                                    boxIntersectsPath(this.boundingBox, this.scene.track.rightBoundary)
-                ? collisionMaterial
-                : noCollisionMaterial;
-
-            // console.log(this.boundingBox.getCenter(new THREE.Vector3()));
-
-            // // Update BoxHelper to match carScene
-            // if (this.boxHelper && this.carScene) {
-            //     this.boxHelper.setFromObject(this.carScene);
-            //     this.boxHelper.update(); // Ensure BoxHelper updates its geometry
-            // }
-
-            // console.log(this.carScene.rotation);
-            // console.log(this.boxHelper.rotation);
         }
     }
+
+   
 
 
     logPosition() {

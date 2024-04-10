@@ -1,12 +1,9 @@
 import * as THREE from 'three';
 import * as YUKA from 'yuka';
 import Car from './Car';
+import {getRotationMatrix} from '../utils';
 
 export default class Bot extends Car {
-
-    initialPosition = THREE.Vector3;
-    initialRotation = THREE.Quaternion;
-
 
     acceleration = 3;
     maxSpeed = 80;
@@ -17,8 +14,7 @@ export default class Bot extends Car {
 
 
     constructor(scene, modelURL, initialPosition, track, difficulty) {
-        super(scene, modelURL);
-        this.initialPosition = initialPosition;
+        super(scene, modelURL, initialPosition);
 
         this.track = track;
 
@@ -34,13 +30,10 @@ export default class Bot extends Car {
             console.error('Error loading model:', error);
         });
 
-        
-
         this.setDifficulty(this.difficulty); 
 
         this.initializeAI();
 
-        // console.log("bot", this.difficulty);
     }
 
     initializeAI() {
@@ -51,16 +44,6 @@ export default class Bot extends Car {
 
         // Add FollowPathBehavior to the steering behavior
         this.followPathBehavior = new YUKA.FollowPathBehavior(this.track.path, 15);
-
-        // this.followPathBehavior = new YUKA.FollowPathBehavior(this.path, {
-        //     arriveDistance: 1,          // Distance threshold for considering a path point reached
-        //     pathOffset: 0.5,            // Offset from the path to aim towards
-        //     predictionTime: 0.1,        // Time horizon for future predictions
-        //     desiredVelocity: 0.5,       // Target velocity along the path
-        //     maxAcceleration: 0.1,       // Maximum acceleration
-        //     maxSpeed: 1.0               // Maximum speed
-        // });
-
 
         this.vehicle.steering.add(this.followPathBehavior);
 
@@ -73,18 +56,33 @@ export default class Bot extends Car {
         this.vehicle.deceleration = this.deceleration; // Set deceleration rate
     }
 
+    handleFinish(OBB, finishLineHitbox) {
+        if (OBB.intersectsOBB(finishLineHitbox) ){
+            console.log("Bot Finished");
+            if(this.scene.playerPosition == 0) {
+                this.scene.playerPosition = 2;
+            }
+            
+        }
+    }
+
     update(deltaTime) {
 
         if (!this.loading) {
-
+            // this.boxHelper.setFromObject(this.carScene);
             
             this.entityManager.update(deltaTime);
             this.updateCarScene(); // Update car's scene based on vehicle's position and rotation
 
             // Update the position of the hitbox to match the carScene position
             if (this.hitbox && this.carScene) {
-                this.boundingBox = new THREE.Box3().setFromObject(this.carScene);
-                this.hitbox.position.copy(this.boundingBox.getCenter(new THREE.Vector3()));
+                const boundingBox = new THREE.Box3().setFromObject(this.carScene);
+                const boxCenter = boundingBox.getCenter(new THREE.Vector3());
+
+                this.boundingBox.center.copy(boxCenter);
+                this.boundingBox.rotation = getRotationMatrix(this.carScene.rotation);
+
+                this.hitbox.position.copy(boxCenter);
                 this.hitbox.rotation.copy(this.carScene.rotation);
             }
 
@@ -95,9 +93,8 @@ export default class Bot extends Car {
             const deltaPosition = this.carScene.position.clone().sub(this.previousPosition);
             this.velocity = deltaPosition.divideScalar(deltaTime);
 
-            // console.log(this.vehicle.initialPosition);
+            this.handleFinish(this.boundingBox, this.track.finishLineHitbox);
 
-            console.log(this.maxSpeed);
         }
     }
 
@@ -113,6 +110,7 @@ export default class Bot extends Car {
 
         // Set the rotation of the carScene to face the movement direction
         this.carScene.rotation.y = rotationAngle;
+
     }
 
     loadGLTF(modelURL, scene, scale, rotationAngle, initialPosition) {

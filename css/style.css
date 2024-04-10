@@ -198,3 +198,58 @@ g#car {
 #options button:hover, #menu button:hover {
     background-color: #5e503d; /* Màu nền nâu nhạt đậm khi di chuột vào */
 }
+
+
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black background */
+    color: white;
+    font-size: 24px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 1s ease; /* CSS transition for opacity */
+}
+
+.overlay.show {
+    display: flex;
+    opacity: 1;
+}
+
+#finishText {
+    margin-bottom: 20px;
+}
+
+#backToMenuButton {
+    padding: 10px 20px;
+    font-size: 20px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+#backToMenuButton:hover {
+    background-color: #45a049;
+}
+
+#countDownOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 24px;
+}

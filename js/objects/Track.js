@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as YUKA from 'yuka';
+import { OBB } from 'three/addons/math/OBB.js';
+import { getRotationMatrixFromTwoPoints, getEulerAnglesFromRotationMatrix, absoluteVector3, createOBBWireframe } from '../utils';
 
 export default class Track {
     scene = THREE.Scene;
@@ -30,6 +32,137 @@ export default class Track {
         this.drawRightSideBoundary();
 
         this.drawLeftSideBoundary();
+
+        this.drawFinishLine();
+
+        this.drawCheckpoints();
+    }
+
+    drawCheckpoints() {
+        const coordinates = [
+            { x: 40.44, y: 0.00, z: 5.46},
+            { x: -28.51, y: 0.00, z: 8.28},
+            { x: 17.05, y: 0.00, z: 472.09},
+            { x: -47.56, y: 0.00, z: 485.54},
+            { x: 71.47, y: 0.00, z: 711.75},
+            { x: 116.32, y: 0.00, z: 766.73},
+            { x: 427.28, y: 0.00, z: 768.39},
+            { x: 503.04, y: 0.00, z: 770.00},
+            { x: 406.27, y: 0.00, z: 309.59},
+            { x: 461.01, y: 0.00, z: 337.61},
+            { x: 771.30, y: 0.00, z: 224.76},
+            { x: 717.18, y: 0.00, z: 189.65},
+            { x: 720.50, y: 0.00, z: 639.00},
+            { x: 652.78, y: 0.00, z: 643.29},
+            { x: 935.41, y: 0.00, z: 886.71},
+            { x: 1006.64, y: 0.00, z: 907.48}
+        ]
+
+        this.checkpoints = [];
+        this.checkpointHitbox = [];
+
+        coordinates.forEach(coord => {
+            const vector = new THREE.Vector3(coord.x, coord.y, coord.z);
+            this.checkpoints.push(vector);
+        });
+
+        // console.log(this.checkpoints);
+
+        for (let i = 0; i < this.checkpoints.length; i+=2) {
+            const point1 = this.checkpoints[i];
+            const point2 = this.checkpoints[i + 1];
+    
+            const center = new THREE.Vector3().copy(point1).add(point2).multiplyScalar(0.5);
+    
+            // Calculate the size (extents) of the OBB
+            const size = absoluteVector3(new THREE.Vector3().copy(point2).sub(point1).multiplyScalar(0.5));
+    
+            const rotationMatrix = getRotationMatrixFromTwoPoints(point2, point1);
+    
+            const box = new OBB(center, size, rotationMatrix);
+            // const box = new OBB().fromBox3(new THREE.Box3(point1, point2));
+
+            // console.log(box);
+
+            this.checkpointHitbox.push(box);
+
+            // if(this.scene.debugMode) {
+            //     const wireframe = createOBBWireframe(box);
+            //     this.scene.add(wireframe);
+            // }
+        }
+
+        // console.log(this.checkpointHitbox);
+
+        if(this.scene.debugMode) {
+            const positions = [];
+
+            // Iterate through the waypoints to create line segments
+            for (let i = 0; i < this.checkpoints.length; i+=2) {
+                const point1 = this.checkpoints[i];
+                const point2 = this.checkpoints[i + 1];
+
+                // Add current point
+                positions.push(point1.x, point1.y, point1.z);
+
+                // Add next point
+                positions.push(point2.x, point2.y, point2.z);
+            }
+
+            const lineMaterial = new THREE.LineBasicMaterial({color: 0xFFFF00});
+            const lineGeometry = new THREE.BufferGeometry();
+
+            lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+            // Create the line object with individual segments
+            const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+            // Add the line to the scene
+            this.scene.add(lines);
+        }
+
+    }
+
+    drawFinishLine() {
+        const coordinates = [
+            { x: 1381.776517849156, y: 0, z: 425.01999945237367},
+            { x: 1370.9019010462332, y: 0, z: 497.5791297000013}
+        ];
+
+        this.finishLine = [];
+
+        coordinates.forEach(coord => {
+            const vector = new THREE.Vector3(coord.x, coord.y, coord.z);
+            this.finishLine.push(vector);
+        });
+
+        const center = new THREE.Vector3().copy(this.finishLine[0]).add(this.finishLine[1]).multiplyScalar(0.5);
+    
+        // Calculate the size (extents) of the OBB
+        const size = absoluteVector3(new THREE.Vector3().copy(this.finishLine[1]).sub(this.finishLine[0]).multiplyScalar(0.5));
+
+        const rotationMatrix = getRotationMatrixFromTwoPoints(this.finishLine[0], this.finishLine[1]);
+
+        this.finishLineHitbox = new OBB(center, size, rotationMatrix);
+
+        // if(this.scene.debugMode) {
+        //     const wireframe = createOBBWireframe(box);
+        //     this.scene.add(wireframe);
+        // }
+
+        // console.log(this.finishLineHitbox);
+
+        if(this.scene.debugMode) {
+
+            const lineMaterial = new THREE.LineBasicMaterial({color: 0xA020F0});
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints(this.finishLine);
+
+            // Create the line object with individual segments
+            const line = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+            // Add the line to the scene
+            this.scene.add(line);
+        }
     }
 
     drawLeftSideBoundary() {
@@ -155,11 +288,34 @@ export default class Track {
         ];
 
         this.leftBoundary = [];
+        this.leftBoundaryHitbox =[];
 
         coordinates.forEach(coord => {
             const vector = new THREE.Vector3(coord.x, coord.y, coord.z);
             this.leftBoundary.push(vector);
         });
+
+        for (let i = 0; i < this.leftBoundary.length - 1; i++) {
+            const point1 = this.leftBoundary[i];
+            const point2 = this.leftBoundary[i + 1];
+    
+            const center = new THREE.Vector3().copy(point1).add(point2).multiplyScalar(0.5);
+    
+            // Calculate the size (extents) of the OBB
+            const size = absoluteVector3(new THREE.Vector3().copy(point2).sub(point1).multiplyScalar(0.5));
+    
+            const rotationMatrix = getRotationMatrixFromTwoPoints(point1, point2);
+    
+            const box = new OBB(center, size, rotationMatrix);
+
+            this.leftBoundaryHitbox.push(box);
+
+            // if(this.scene.debugMode) {
+            //     const wireframe = createOBBWireframe(box);
+            //     this.scene.add(wireframe);
+            // }
+        }
+
 
         if(this.scene.debugMode) {
 
@@ -320,13 +476,33 @@ export default class Track {
         ];
 
         this.rightBoundary = [];
+        this.rightBoundaryHitbox = [];
 
         coordinates.forEach(coord => {
             const vector = new THREE.Vector3(coord.x, coord.y, coord.z);
             this.rightBoundary.push(vector);
         });
 
-        // console.log(this.rightBoundary[0].x);
+        for (let i = 0; i < this.rightBoundary.length - 1; i++) {
+            const point1 = this.rightBoundary[i];
+            const point2 = this.rightBoundary[i + 1].add(new THREE.Vector3(0,1,0));
+    
+            const center = new THREE.Vector3().copy(point1).add(point2).multiplyScalar(0.5);
+    
+            // Calculate the size (extents) of the OBB
+            const size = absoluteVector3(new THREE.Vector3().copy(point2).sub(point1).multiplyScalar(0.5));
+    
+            const rotationMatrix = getRotationMatrixFromTwoPoints(point1, point2);
+
+            const box = new OBB(center, size, rotationMatrix);
+
+            this.rightBoundaryHitbox.push(box);
+
+            // if(this.scene.debugMode) {
+            //     const wireframe = createOBBWireframe(box);
+            //     this.scene.add(wireframe);
+            // }
+        }
 
         if(this.scene.debugMode) {
 
@@ -442,7 +618,8 @@ export default class Track {
             // called when the resource is loaded
             ( gltf ) => {
                 this.trackScene = gltf.scene;
-                
+                this.trackScene.receiveShadow = true;
+                this.trackScene.castShadow = true;
 
                 this.setGLTFPosition(this.trackScene, this.x, this.y, this.z);
                 this.scaleGLTF(this.trackScene, this.scale);

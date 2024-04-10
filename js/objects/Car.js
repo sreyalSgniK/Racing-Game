@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { createOBBWireframe, getHalfVector} from '../utils';
+import { OBB } from 'three/addons/math/OBB.js';
 
 // Abstract class for car used for players & bots
 export default class Car {
@@ -8,6 +10,11 @@ export default class Car {
     modelURL = "";
     
     carScene = null;
+
+    boundingBox = OBB;
+
+    initialPosition = THREE.Vector3;
+    
 
     // Model parameters
     scale = 0.03;
@@ -25,20 +32,27 @@ export default class Car {
     // Loading flag: Program will wait for the models to finish loading before continuing
     loading = true;
 
-    constructor(scene = THREE.Scene, modelURL = String) {
+    constructor(scene = THREE.Scene, modelURL = String, initialPosition = THREE.Vector3) {
         this.scene = scene;
         this.modelURL = modelURL;
-        
+        this.initialPosition = initialPosition;
     }
 
     setupHitbox() {
         if (!this.carScene) return; // Ensure carScene is loaded
 
-        this.boundingBox = new THREE.Box3().setFromObject(this.carScene);
+        const box = new THREE.Box3().setFromObject(this.carScene);
 
-        const boxSize = this.boundingBox.getSize(new THREE.Vector3());
-        const boxCenter = this.boundingBox.getCenter(new THREE.Vector3());
+        const boxSize = box.getSize(new THREE.Vector3());
+        const boxCenter = box.getCenter(new THREE.Vector3());
+
+        // console.log(boxSize);
+
+        this.boundingBox = new OBB(boxCenter, getHalfVector(boxSize), new THREE.Matrix3());
         // console.log(boxCenter);
+
+        // const wireframe = createOBBWireframe(this.boundingBox);
+        // this.scene.add(wireframe);
 
         const hitboxGeometry = new THREE.BoxGeometry(boxSize.x, boxSize.y, boxSize.z);
         const hitboxMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, visible: this.scene.debugMode, wireframe: true });
@@ -68,7 +82,9 @@ export default class Car {
                 // called when the resource is loaded
                 (gltf) => {
                     this.carScene = gltf.scene;
+                    this.carScene.castShadow = true;
                     this.scaleGLTF(this.carScene, scale);
+                    this.carScene.position.copy(this.initialPosition);
                     scene.add(this.carScene);
                     this.loading = false; // Set loading flag to false
                     resolve(); // Resolve the promise once loading is complete
@@ -88,8 +104,4 @@ export default class Car {
         });
     }
 
-    
-    
-
-    
 }
