@@ -13,6 +13,8 @@ export default class Player extends Car {
 
     track = Track;
 
+    colliding = false;
+
     checkpointNumber = 0;
 
     constructor(scene = THREE.Scene, modelURL = String, initialPosition = THREE.Vector3) {
@@ -111,7 +113,7 @@ export default class Player extends Car {
             if (this.movementSpeed > 0) {
                 this.movementSpeed -= this.turnDeceleration * deltaTime;
                 this.carScene.rotation.y += this.rotationSpeed * deltaTime;
-            } else {
+            } else if (this.movementSpeed < 0) {
                 this.movementSpeed += this.turnDeceleration * deltaTime;
                 this.carScene.rotation.y -= this.rotationSpeed * deltaTime;
             }
@@ -125,7 +127,7 @@ export default class Player extends Car {
             if (this.movementSpeed < 0) {
                 this.movementSpeed += this.turnDeceleration * deltaTime;
                 this.carScene.rotation.y += this.rotationSpeed * deltaTime;
-            } else {
+            } else if (this.movementSpeed > 0) {
                 this.movementSpeed -= this.turnDeceleration * deltaTime;
                 this.carScene.rotation.y -= this.rotationSpeed * deltaTime;
             }
@@ -153,22 +155,13 @@ export default class Player extends Car {
             wireframe: true
         });
 
-        const noCollisionMaterial = new THREE.MeshBasicMaterial({
-            color: 0xFFFFFF, // White color indicates no collision
-            visible: this.scene.debugMode,
-            wireframe: true
-        });
-
-        // Apply the appropriate material based on collision state
-        this.hitbox.material = this.boundingBox.intersectsOBB(this.scene.bot.boundingBox) ||
-                                boxIntersectsPath(this.boundingBox, leftBoundaryHitbox) ||
-                                boxIntersectsPath(this.boundingBox, rightBoundaryHitbox)
-            ? collisionMaterial : noCollisionMaterial;
-
+        
 
         // Check for collision with the bot
         if (playerOBB.intersectsOBB(botOBB)) {
             // Resolve collision with the bot (e.g., separate objects)
+            this.colliding = true;
+            this.hitbox.material = collisionMaterial;
             this.resolveCollision(this.carScene, this.scene.bot.carScene);
             this.movementSpeed -= this.acceleration * 2 *deltaTime;
             console.log("Hit car");
@@ -177,17 +170,21 @@ export default class Player extends Car {
         // Check collision with the left boundary
         if (boxIntersectsPath(playerOBB, leftBoundaryHitbox)) {
             // Push player away from the left boundary
+            this.colliding = true;
+            this.hitbox.material = collisionMaterial;
             console.log("Hit left wall");
 
-            // this.resetToLastCheckpoint();
+            this.resetToLastCheckpoint();
         }
 
         // Check collision with the right boundary
         if (boxIntersectsPath(playerOBB, rightBoundaryHitbox)) {
             // Push player away from the right boundary
+            this.colliding = true;
+            this.hitbox.material = collisionMaterial;
             console.log("Hit right wall");
 
-            // this.resetToLastCheckpoint();
+            this.resetToLastCheckpoint();
         }
     }
 
@@ -202,8 +199,9 @@ export default class Player extends Car {
     handleFinish(playerOBB, finishLineHitbox) {
         if (playerOBB.intersectsOBB(finishLineHitbox) ){
             console.log("Player finished");
+            this.colliding = true;
             this.hitbox.material = new THREE.MeshBasicMaterial({
-                color: 0xA020F0,
+                color: 0xA020F0, // Purple
                 visible: this.scene.debugMode,
                 wireframe: true
             });
@@ -218,14 +216,24 @@ export default class Player extends Car {
 
     handleCheckpoints(playerOBB, checkpointHitbox) {
         // console.log(checkpointHitbox);
-        if(playerOBB.intersectsOBB(checkpointHitbox[this.checkpointNumber])) {
+
+        for(let i = 0; i < checkpointHitbox.length; i++) {
+            if(playerOBB.intersectsOBB(checkpointHitbox[i])) {
+                this.colliding = true;
+                this.hitbox.material = new THREE.MeshBasicMaterial({
+                    color: 0xFFFF00, // Yellow
+                    visible: this.scene.debugMode,
+                    wireframe: true
+                });
+                // console.log("Passing");
+            }
+
+        }
+
+        if(this.checkpointNumber < checkpointHitbox.length && playerOBB.intersectsOBB(checkpointHitbox[this.checkpointNumber])) {
             console.log("Passed checkpoint ", this.checkpointNumber);
             this.checkpointNumber++;
-            this.hitbox.material = new THREE.MeshBasicMaterial({
-                color: 0xFFFF00,
-                visible: this.scene.debugMode,
-                wireframe: true
-            });
+            
         }
 
     }
@@ -235,6 +243,14 @@ export default class Player extends Car {
         const lastCheckpoint = (this.checkpointNumber==0) ? 0 : this.checkpointNumber-1;
         this.carScene.position.copy(this.track.checkpointHitbox[lastCheckpoint].center);
 
+        const rotation = new THREE.Vector3(
+            this.track.checkpointHitbox[lastCheckpoint].rotation,  // Second element of the first row (m12)
+            this.track.checkpointHitbox[lastCheckpoint].rotation,  // Second element of the second row (m22)
+            this.track.checkpointHitbox[lastCheckpoint].rotation   // Second element of the third row (m32)
+        );
+
+        // const rotation = new THREE.Vector3().setFromMatrix3Row(this.track.checkpointHitbox[lastCheckpoint].rotation, 1);
+        // this.carScene.rotation.copy(rotation);
     }
 
 
@@ -263,11 +279,22 @@ export default class Player extends Car {
             
 
             // Check collisions and handle physics
+
+            this.colliding = false;
+
             this.handleCollisions(this.boundingBox, this.scene.bot.boundingBox, this.track.leftBoundaryHitbox, this.track.rightBoundaryHitbox, deltaTime);
 
-            // this.handleCheckpoints(this.boundingBox, this.track.checkpointHitbox);
+            this.handleCheckpoints(this.boundingBox, this.track.checkpointHitbox);
 
             this.handleFinish(this.boundingBox, this.track.finishLineHitbox);
+
+            if(!this.colliding) {
+                this.hitbox.material = new THREE.MeshBasicMaterial({
+                    color: 0xFFFFFF, // White color indicates no collision
+                    visible: this.scene.debugMode,
+                    wireframe: true
+                });
+            }
 
         }
     }

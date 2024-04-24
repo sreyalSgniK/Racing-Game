@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as YUKA from 'yuka';
 import { OBB } from 'three/addons/math/OBB.js';
-import { getRotationMatrixFromTwoPoints, getEulerAnglesFromRotationMatrix, absoluteVector3, createOBBWireframe } from '../utils';
+import { getRotationMatrixFromTwoPoints, getEulerAnglesFromRotationMatrix, absoluteVector3, createOBBWireframe, createOBBFrom2Points } from '../utils';
 
 export default class Track {
     scene = THREE.Scene;
@@ -72,24 +72,17 @@ export default class Track {
             const point1 = this.checkpoints[i];
             const point2 = this.checkpoints[i + 1];
     
-            const center = new THREE.Vector3().copy(point1).add(point2).multiplyScalar(0.5);
-    
-            // Calculate the size (extents) of the OBB
-            const size = absoluteVector3(new THREE.Vector3().copy(point2).sub(point1).multiplyScalar(0.5));
-    
-            const rotationMatrix = getRotationMatrixFromTwoPoints(point2, point1);
-    
-            const box = new OBB(center, size, rotationMatrix);
+            const box = createOBBFrom2Points(point1, point2);
             // const box = new OBB().fromBox3(new THREE.Box3(point1, point2));
 
             // console.log(box);
 
             this.checkpointHitbox.push(box);
 
-            // if(this.scene.debugMode) {
-            //     const wireframe = createOBBWireframe(box);
-            //     this.scene.add(wireframe);
-            // }
+            if(this.scene.debugMode) {
+                const wireframe = createOBBWireframe(box);
+                this.scene.add(wireframe);
+            }
         }
 
         // console.log(this.checkpointHitbox);
@@ -136,19 +129,12 @@ export default class Track {
             this.finishLine.push(vector);
         });
 
-        const center = new THREE.Vector3().copy(this.finishLine[0]).add(this.finishLine[1]).multiplyScalar(0.5);
-    
-        // Calculate the size (extents) of the OBB
-        const size = absoluteVector3(new THREE.Vector3().copy(this.finishLine[1]).sub(this.finishLine[0]).multiplyScalar(0.5));
+        this.finishLineHitbox = createOBBFrom2Points(this.finishLine[0], this.finishLine[1]);
 
-        const rotationMatrix = getRotationMatrixFromTwoPoints(this.finishLine[0], this.finishLine[1]);
-
-        this.finishLineHitbox = new OBB(center, size, rotationMatrix);
-
-        // if(this.scene.debugMode) {
-        //     const wireframe = createOBBWireframe(box);
-        //     this.scene.add(wireframe);
-        // }
+        if(this.scene.debugMode) {
+            const wireframe = createOBBWireframe(this.finishLineHitbox);
+            this.scene.add(wireframe);
+        }
 
         // console.log(this.finishLineHitbox);
 
@@ -299,21 +285,14 @@ export default class Track {
             const point1 = this.leftBoundary[i];
             const point2 = this.leftBoundary[i + 1];
     
-            const center = new THREE.Vector3().copy(point1).add(point2).multiplyScalar(0.5);
-    
-            // Calculate the size (extents) of the OBB
-            const size = absoluteVector3(new THREE.Vector3().copy(point2).sub(point1).multiplyScalar(0.5));
-    
-            const rotationMatrix = getRotationMatrixFromTwoPoints(point1, point2);
-    
-            const box = new OBB(center, size, rotationMatrix);
+            const box = createOBBFrom2Points(point1, point2);
 
             this.leftBoundaryHitbox.push(box);
 
-            // if(this.scene.debugMode) {
-            //     const wireframe = createOBBWireframe(box);
-            //     this.scene.add(wireframe);
-            // }
+            if(this.scene.debugMode) {
+                const wireframe = createOBBWireframe(box);
+                this.scene.add(wireframe);
+            }
         }
 
 
@@ -487,21 +466,14 @@ export default class Track {
             const point1 = this.rightBoundary[i];
             const point2 = this.rightBoundary[i + 1].add(new THREE.Vector3(0,1,0));
     
-            const center = new THREE.Vector3().copy(point1).add(point2).multiplyScalar(0.5);
-    
-            // Calculate the size (extents) of the OBB
-            const size = absoluteVector3(new THREE.Vector3().copy(point2).sub(point1).multiplyScalar(0.5));
-    
-            const rotationMatrix = getRotationMatrixFromTwoPoints(point1, point2);
-
-            const box = new OBB(center, size, rotationMatrix);
+            const box = createOBBFrom2Points(point1, point2);
 
             this.rightBoundaryHitbox.push(box);
 
-            // if(this.scene.debugMode) {
-            //     const wireframe = createOBBWireframe(box);
-            //     this.scene.add(wireframe);
-            // }
+            if(this.scene.debugMode) {
+                const wireframe = createOBBWireframe(box);
+                this.scene.add(wireframe);
+            }
         }
 
         if(this.scene.debugMode) {

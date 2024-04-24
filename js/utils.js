@@ -43,6 +43,8 @@ export function getRotationMatrixFromTwoPoints(point1, point2) {
         axis.z, second.z, direction.z
     );
 
+    // const rotationMatrix = getRotationMatrix(direction);
+
     return rotationMatrix;
 }
 
@@ -134,4 +136,38 @@ export function createOBBWireframe(obb) {
     const wireframe = new THREE.LineSegments(geometry, material);
 
     return wireframe;
+}
+
+export function createOBBFrom2Points(point1 = THREE.Vector3, point2 = THREE.Vector3) {
+    const center = new THREE.Vector3().copy(point1).add(point2).multiplyScalar(0.5);
+    
+    // Calculate the size (extents) of the OBB
+    // const size = absoluteVector3(new THREE.Vector3().copy(point2).sub(point1).multiplyScalar(0.5));
+
+
+    const size = new THREE.Vector3(distancebetween2Points(point1, point2), 1, 1).multiplyScalar(0.5);
+
+    const rotationMatrix = rotationMatrixY(point1, point2);
+
+    return new OBB(center, size, rotationMatrix);
+    // return new OBB(center, size);
+
+}
+
+export function distancebetween2Points(point1, point2){
+    return Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2) + Math.pow(point1.z - point2.z, 2)) ;
+}
+
+export function rotationMatrixY(point1, point2) {
+    const direction = new THREE.Vector3().copy(point2).sub(point1);
+    // console.log(direction);
+    const angle = -Math.atan2(direction.z, direction.x);
+    const cosTheta = Math.cos(angle);
+    const sinTheta = Math.sin(angle);
+
+    return new THREE.Matrix3().set(
+        cosTheta, 0, sinTheta,
+        0, 1, 0,
+        -sinTheta, 0, cosTheta
+    );
 }

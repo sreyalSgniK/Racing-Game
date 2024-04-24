@@ -40,7 +40,7 @@ export default class GameScene extends THREE.Scene {
         super();
 
         this.difficulty = difficulty;
-        this.debugMode = false;
+        this.debugMode = true;
 
         // console.log(this.difficulty);
         
